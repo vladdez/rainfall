@@ -1,0 +1,4 @@
+- buffer overflow
+- targeted functions: run and main
+- vulnerability in main: gets() function (receives user input) has no buffer limit
+- vulnerability in run: system() 
