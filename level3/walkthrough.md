@@ -1,7 +1,7 @@
 - attack: format string exploitation
 - binary behavior: reprints argument, if global argument = 64 run he shell
 - targeted functions: v and main
-- vulnerability in v: printf()
+- vulnerability in v: printf() without specification
 - defense: fget
 
 Method:
