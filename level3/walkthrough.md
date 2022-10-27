@@ -1,18 +1,18 @@
-- attack: format string exploitation (adress leaks)
-- binary behavior: gets gets argument and send it to printf, if global argument = 64 run the shell
+- attack: format string exploitation (address leaks)
+- binary behavior: fgets argument and send it to printf, if global argument = 64 run the shell
 - targeted functions: v and main
 - vulnerability in v: printf() without argument (Bugs section in printf man)
 - defense: fget
 
 Method:
 - do stack leakage
-- find in leakage the position of the buffer 
+- find in leakage the position of the buffer (find repetition and compare with hex ASCII table)
 - find the global variable (password)
 - overwrite buffer with address of global variable 
 - and pass 64 as its value
  
 Info:
-- poisiton of buffer in stack - 4
+- positon of buffer in stack - 4
 
 - 0x804988c - address global variable
 - 8c980408 - same in little-endian
