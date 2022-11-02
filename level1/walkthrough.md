@@ -1,8 +1,8 @@
 - attack: buffer overflow
-- binary behavior: 
+- binary behavior: get argument and do nothing
 - targeted functions: run and main
 - vulnerability in main: gets() function (receives user input) has no buffer limit
-- vulnerability in run: system() run /bin/sh
+- vulnerability in run: system() runs /bin/sh
 
 Method:
 - find the overflow size
@@ -34,11 +34,11 @@ main
 08048480 <main>:
  8048480:       55                      push   %ebp
  8048481:       89 e5                   mov    %esp,%ebp
- 8048483:       83 e4 f0                and    $0xfffffff0,%esp
- 8048486:       83 ec 50                sub    $0x50,%esp
- 8048489:       8d 44 24 10             lea    0x10(%esp),%eax
- 804848d:       89 04 24                mov    %eax,(%esp)
- 8048490:       e8 ab fe ff ff          call   8048340 <gets@plt> # exploit
+ 8048483:       83 e4 f0                and    $0xfffffff0,%esp     # put buffer in esp
+ 8048486:       83 ec 50                sub    $0x50,%esp           # of size 80
+ 8048489:       8d 44 24 10             lea    0x10(%esp),%eax      # - 16 = 64 and put it in eax 
+ 804848d:       89 04 24                mov    %eax,(%esp)          # and put in in buffer  
+ 8048490:       e8 ab fe ff ff          call   8048340 <gets@plt>   # exploit - buffer in gets
  8048495:       c9                      leave
  8048496:       c3                      ret # put here the adress of run function
 

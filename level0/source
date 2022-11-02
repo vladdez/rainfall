@@ -1,0 +1,25 @@
+#include <sys/types.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
+int                 main(int ac, char **av)
+{
+    char *var_20[2];
+    gid_t	gid;
+	uid_t	uid;
+
+    if(atoi(av[1]) != 423)
+        fwrite("No !\n", 5, 1, stderr);
+    else
+    {
+        var_20[0] = strdup("/bin/sh");
+        var_20[1] = NULL;
+        gid = getegid();
+        uid = getuid();
+        setresgid(gid, gid, gid);
+		setresuid(uid, uid, uid);
+        execv("/bin/sh", var_20)
+    }
+    return(0);
+}
