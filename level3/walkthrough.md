@@ -43,6 +43,10 @@ QA
 
 - why padding is 64?
 
+- why we cannot just pass "A" * 60?
+
+- where exacly do we write the address of global variable
+
 - how do we pass the global varibale?
 - "A" * 60 + "%4$n - here %n will write the number of preceding bytes (64) and put it the pointed location: the position of 4th argument (buffer)
 
