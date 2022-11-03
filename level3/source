@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int     m;
+signed int     m;
 
 void    v(void)
 {

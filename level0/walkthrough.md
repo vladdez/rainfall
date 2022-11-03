@@ -1,6 +1,6 @@
 ![image](https://user-images.githubusercontent.com/33777074/196237432-cf1bd4a4-1ac7-4203-8ee1-b071c74fd1d4.png)
 
-- attack: password guessing
+- attack: password revealing
 - binary behavior: segfault with no argument, "No" with any number except the password
 
 Info:
