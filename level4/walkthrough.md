@@ -1,4 +1,4 @@
-- attack: format string exploitation (adress leaks)
+- attack: format string exploitation
 - binary behavior: fgets argument and send it to printf, if global argument = 64 run the shell
 - targeted functions: n, p and main
 - vulnerability in v: printf() without argument (Bugs section in printf man)
@@ -42,12 +42,12 @@ Functions
 08048457 <n>:
  8048457:       55                      push   %ebp
  8048458:       89 e5                   mov    %esp,%ebp
- 804845a:       81 ec 18 02 00 00       sub    $0x218,%esp
+ 804845a:       81 ec 18 02 00 00       sub    $0x218,%esp #536
  8048460:       a1 04 98 04 08          mov    0x8049804,%eax
  8048465:       89 44 24 08             mov    %eax,0x8(%esp)
  8048469:       c7 44 24 04 00 02 00    movl   $0x200,0x4(%esp)
  8048470:       00
- 8048471:       8d 85 f8 fd ff ff       lea    -0x208(%ebp),%eax
+ 8048471:       8d 85 f8 fd ff ff       lea    -0x208(%ebp),%eax #520
  8048477:       89 04 24                mov    %eax,(%esp)
  804847a:       e8 d1 fe ff ff          call   8048350 <fgets@plt> # defence
  804847f:       8d 85 f8 fd ff ff       lea    -0x208(%ebp),%eax

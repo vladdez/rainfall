@@ -1,0 +1,30 @@
+Additional info
+
+pypes
+- < - (process substitution) feed the output of right process/es into stdin of lest process
+- | - (pipe) same
+- < <(;) - same but passing two commands
+- <() <() - same
+- << - (here-document) pass the ending string, write arguments, exit with writing ending string
+- <<< - (here-string) just passing a string as argument
+ 
+
+calls  
+- execve() - execute the programm  
+- getegid() - find the effective group ID  (GID) of the calling process. 
+- getuid() - find user ID 
+- setresuid(uid, uid, uid) - sets the real user ID, the effective user ID, and the saved set-user-ID  
+- fwrite() - write with third parameter - number of elements, each one with a size of size bytes. 
+- gets() - reads a line from stdin and stores it into the string pointed to by str. It stops when either the newline character is read or when the end-of-file is reached, whichever comes first.
+- fflush() - clears the output buffer of a stream and move the buffered data to console (in case of stdout). Now buffer is ready for a new string
+- puts() - writes a string to stdout up to but not including the null character. A newline character is appended to the output.
+
+registers
+
+- Esp – stack pointer, always point to the top of the stack. Manipulated by processor 
+- Ebp – frame poiner, point to the position in the stack. Manipulated by programm 
+- Eax – return value 
+- Eip - eip, or the instruction pointer, is a special-purpose register which stores a pointer to the address of the instruction that is currently executing. Making a jump is like adding to or subtracting from the instruction pointer. The most left column in gdb 
+
+terms
+- hex offset - the order of element in memory array (base address + offset = absolute address)
