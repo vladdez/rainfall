@@ -6,7 +6,7 @@ void    v(void)
 {
     char    *buffer[520]
 
-    fgets(buffer, 520, stdin);
+    fgets(buffer, 512, stdin);
     prinf(buffer);
     if (m == 64)
     {

