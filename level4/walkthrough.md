@@ -1,7 +1,7 @@
 - attack: format string exploitation
 - binary behavior: fgets argument and send it to printf, if global argument = 16930116 run the shell
 - targeted functions: n, p and main
-- vulnerability in v: printf() without argument (Bugs section in printf man)
+- vulnerability in p: printf() without argument (Bugs section in printf man)
 - defense: fget
 
 Method:

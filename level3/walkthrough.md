@@ -31,7 +31,7 @@ objdump -t level3
 
 QA
 - why the leakage of global varibale happens?
-- Printf has no specificators. If we pass %smth in the stdin, prinf will consider it as specificator. Printf will try to print arguments, when they end - prinf will use global variables
+- Printf has no specificators. If we pass %smth in the stdin, prinf will consider it as specificator. Printf will search for arguments in stack printing in the following order: address of format string, values of arguments (buffer), addresses of arguments
 
 - what is 0x200?
 - format parameter

@@ -28,9 +28,6 @@ QA
 - How do we know buffer address?
 - ltrace() and see address of strdup
 
-- How do we know the padding size? 
-- by interative search or by buffer size (80 - 4)
-
 Code:
 objdump -d ./level2
 ltrace ./level2 

