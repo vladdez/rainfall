@@ -1,13 +1,13 @@
 #0
 
 - attack: password revealing
-- binary behavior: segfault with no argument, "No" with any number except the password
+- binary behaviour: segfault with no argument, "No" with any number except the password
 
 - 0x1a7 = 423
 
 #1
 - attack: buffer overflow with direct shell call
-- binary behavior: get argument and do nothing
+- binary behaviour: get argument and do nothing
 - targeted functions: run and main
 - vulnerability in main: gets() function (receives user input) has no buffer limit
 - vulnerability in run: system() runs /bin/sh
@@ -34,7 +34,7 @@ QA:
 - overflow by any number -> get address and put it in 'find offset' (pattern and offset are related)
 
 - how do we find the return function address?
-- find it in assembler code before finction name: 08048444 <run>
+- find it in assembler code before function name: 08048444 <run>
 
 - why simple multiplication of same symbol doesn't work for overflowing in gdb and we need random pattern generation?
 
@@ -43,11 +43,11 @@ QA:
 
 #2
 - attack: buffer overflow with shell call payload
-- binary behavior: reprints argument
+- binary behaviour: reprints argument
 - targeted functions: p and main
 - vulnerability in main: gets()
 - vulnerability in p: strdup()
-- defense: no stack overwirting is possible because of comparison of eip address with predefined eip address 
+- defence: no stack overwriting is possible because of comparison of eip address with predefined eip address 
 
 Method:
 - find the offset padding size
@@ -55,7 +55,7 @@ Method:
 - find the buffer address used by strdup
 - overwrite buffer by code calling shell
 - overwrite eip by the buffer address
-- cat passwd when get console with root privedges
+- cat passwd when get console with root privileges
 
 Info:
 - 0x0804a008 - buffer address
@@ -71,20 +71,20 @@ QA
 
 #3
 - attack: format string exploitation (address leaks)
-- binary behavior: fgets argument and send it to printf, if global argument = 64 run the shell
+- binary behaviour: fgets argument and send it to printf, if global argument = 64 run the shell
 - targeted functions: v and main
 - vulnerability in v: printf() without argument (Bugs section in printf man)
-- defense: fget
+- defence: fget
 
 Method:
 - do stack leakage
 - find in leakage the position of the argument (find repetition and compare with hex ASCII table)
 - find the address of global variable and its correct condition
-- check that you can put global veriable address instead of argument
+- check that you can put global variable address instead of argument
 - write 64 to the global variable using %n and %u modifiers
  
 Info:
-- positon of buffer in stack - 4
+- position of buffer in stack - 4
 
 - 0804988c - address of global variable
 - 8c980408 - same in little-endian
@@ -94,13 +94,13 @@ Info:
 - offset code structure: 64 = 4 (global variable address) + 60 (padding)
 
 QA
-- why the leakage of global varibale happens in printf?
-- Printf has no specifications. If we pass %smth in the stdin, prinf will consider it as specification. Printf will search for arguments in stack printing in the following order: address of format string, values of arguments (buffer), addresses of arguments
+- why the leakage of global variable happens in printf?
+- Printf has no specifications. If we pass %smth in the stdin, printf will consider it as specification. Printf will search for arguments in stack printing in the following order: address of format string, values of arguments (buffer), addresses of arguments
 
 - how to find a global variable?
 - objdump -t level3 -> 0804988c g     O .bss   00000004              m
 
-- Where exacly do we write the address of global variable
+- Where exactly do we write the address of global variable
 - The format string is usually located on the stack itself. Arguments of prinf should be located after it
 
 - how do we pass argument for the global varibale?
@@ -108,10 +108,10 @@ QA
 
 #4
 - attack: format string exploitation
-- binary behavior: fgets argument and send it to printf, if global argument = 16930116 run the shell
+- binary behaviour: fgets argument and send it to printf, if global argument = 16930116 run the shell
 - targeted functions: n, p and main
 - vulnerability in p: printf() without argument (Bugs section in printf man)
-- defense: fget
+- defence: fget
 
 Method:
 - do stack leakage
@@ -121,7 +121,7 @@ Method:
 - and pass 16930116 as its value
  
 Info:
-- positon of argument in stack - 12
+- position of argument in stack - 12
 
 - 0x8049810 - address global variable
 - 10980408 - same in little-endian
@@ -132,7 +132,7 @@ Info:
 
 #5
 - attack: format string exploitation using Global Offset Table
-- binary behavior: fgets argument and send it to printf
+- binary behaviour: fgets argument and send it to printf
 - targeted functions: n, o and main
 - vulnerability in n: printf() without argument (Bugs section in printf man)
 - vulnerability in o: no ASLR (address space layout realisation)
@@ -157,18 +157,21 @@ Info:
 
 QA:
 - why we can rewrite exit function
-- <exit@plt> from n calls real 'exit' address from GOT. GOT keeps addresses of libc library. We can change the value inside GOT by the new address
+- <exit@plt> from n calls real 'exit' address from PLT. PLT si procedure linkage table, keeps addresses of libc library. We can change the value inside GOT by the new address
+
+- what is the function of PLT?
+- instead of searaching the location of function each call, it is faster to call the function that will remember it
 
 #6
 - attack: buffer overflow
-- binary behavior: segfault without parameter, Nope with parameter
+- binary behaviour: segfault without parameter, ‘Nope’ with parameter
 - targeted functions: n, m and main
 - vulnerability in n: strcpy() in comparison to strncpy() has no limitimg argument
-- defense: function n with system call is non-called
+- defence: function n with system call is non-called
 
 Method:
 - find the overflow size of strcpy
-- find eip offest size after overwlofing strcpy
+- find eip offset size after overwlofing strcpy
 - find the address of n function
 - overflow and change eip address by n address
  
@@ -179,22 +182,21 @@ Info:
 
 #7
 - attack: buffer overflow using GOT + format string exploitation
-- binary behavior: segfault without or with 1 parameter, ~~ with 2 parameters
+- binary behaviour: segfault without or with 1 parameter, ~~ with 2 parameters
 - targeted functions: m and main
 - vulnerability in m: strcpy() in comparison to strncpy() has no limitimg argument
 - defense: 
 
 Method: send address of fopens (after secdons strcpy) to the function m with printf
 - find the overflow offset for first strcpy
-- check it - correct offset will put paypload into second strcpy after overflowing
+- check it - correct offset will put payload into second strcpy after overflowing
 
 - find the address of 'puts' function in GOT
 - find the address of m function
 
 - write in GOT 'm' address instead of 'puts' address 
 - enter to the m function
-- 'm' will execute printf with varibale pass
-
+- 'm' will execute printf with variable pass
 
 Info:
 - offset size - 20

